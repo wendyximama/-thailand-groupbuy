@@ -137,6 +137,24 @@ nav {
   border-radius:8px; cursor:pointer; font-size:0.8rem; font-family:inherit; transition:background 0.2s;
 }
 .add-btn:hover { background:var(--teal); }
+.size-chart-btn {
+  display:inline-block; margin-top:0.4rem; font-size:0.72rem; color:var(--teal);
+  cursor:pointer; text-decoration:underline; background:none; border:none;
+  padding:0; font-family:inherit;
+}
+/* ===== SIZE CHART LIGHTBOX ===== */
+#sizeChartLightbox {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85);
+  z-index:9999; align-items:center; justify-content:center;
+}
+#sizeChartLightbox.on { display:flex; }
+#sizeChartLightbox img {
+  max-width:92vw; max-height:88vh; border-radius:12px; object-fit:contain;
+}
+#sizeChartLightbox .lbx-close {
+  position:absolute; top:1rem; right:1.2rem; color:white; font-size:2rem;
+  cursor:pointer; line-height:1; background:none; border:none;
+}
 
 /* ===== CART DRAWER ===== */
 .overlay { position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:1998; display:none; }
@@ -595,8 +613,8 @@ function doGet(e) {
     </div>
     <div id="loginPane">
       <div class="fg">
-        <label class="fl">手机号码 / 微信号</label>
-        <input class="fi" id="loginId" placeholder="请输入登录账号">
+        <label class="fl">电话号码</label>
+        <input class="fi" id="loginId" placeholder="请输入电话号码">
       </div>
       <button class="btn-pri" style="width:100%;margin-top:0.5rem" onclick="doLogin()">登录</button>
       <p style="text-align:center;margin-top:0.9rem;font-size:0.78rem;color:#aaa">
@@ -604,12 +622,9 @@ function doGet(e) {
       </p>
     </div>
     <div id="regPane" style="display:none">
-      <div class="fi-row">
-        <div class="fg"><label class="fl">姓名 *</label><input class="fi" id="regName" placeholder="你的姓名"></div>
-        <div class="fg"><label class="fl">手机号码 *</label><input class="fi" id="regPhone" placeholder="手机号码"></div>
-      </div>
-      <div class="fg"><label class="fl">微信号</label><input class="fi" id="regWechat" placeholder="微信号（方便联系）"></div>
-      <div class="fg"><label class="fl">收货地址</label><textarea class="fi" id="regAddr" rows="2" placeholder="省/市/区/详细地址"></textarea></div>
+      <div class="fg"><label class="fl">姓名 *</label><input class="fi" id="regName" placeholder="你的姓名"></div>
+      <div class="fg"><label class="fl">电话号码 *</label><input class="fi" id="regPhone" placeholder="电话号码"></div>
+      <div class="fg"><label class="fl">邮寄地址 *</label><textarea class="fi" id="regAddr" rows="3" placeholder="完整邮寄地址（包括邮编）"></textarea></div>
       <button class="btn-pri" style="width:100%;margin-top:0.5rem" onclick="doRegister()">注册账号</button>
     </div>
   </div>
@@ -634,10 +649,14 @@ function doGet(e) {
       <div id="orderSummary" class="summary-box"></div>
       <div class="fi-row">
         <div class="fg"><label class="fl">姓名 *</label><input class="fi" id="ckName" placeholder="你的姓名"></div>
-        <div class="fg"><label class="fl">手机 / 微信 *</label><input class="fi" id="ckPhone" placeholder="联系方式"></div>
+        <div class="fg"><label class="fl">电话 *</label><input class="fi" id="ckPhone" placeholder="电话号码"></div>
       </div>
       <div class="fg"><label class="fl">收货地址 *</label><textarea class="fi" id="ckAddr" rows="2" placeholder="省/市/区/详细地址/门牌号"></textarea></div>
       <div class="fg"><label class="fl">备注（颜色/尺码/其他）</label><textarea class="fi" id="ckNotes" rows="2" placeholder="如需指定颜色尺码，请在此注明"></textarea></div>
+      <div style="background:rgba(232,115,74,0.15);border:1px solid var(--coral);border-radius:10px;padding:0.75rem 1rem;margin:0.75rem 0;font-size:0.82rem;color:#f0b090;line-height:1.6">
+        ⚠️ <strong>重要提示：</strong>请在下单前确认好尺码及产品款式。<br>
+        一旦订单确认，<strong>错误的尺码或款式将无法退换</strong>，敬请留意。
+      </div>
       <div class="btn-row">
         <button class="btn-sec" onclick="closeModal('checkoutModal')">取消</button>
         <button class="btn-pri" onclick="toStep2()">下一步 →</button>
@@ -721,6 +740,7 @@ const PRODUCTS = [
     id:'bio30', brand:'Bio Treatment', cat:'护发',
     name:'发膜 30ml 小包装', sub:'7-11必买 · 最热卖',
     price:12, emoji:'💆', badge:'🔥 必买',
+    img:'Bio%20Treatment%2030ml%20%E5%B0%8F%E5%8C%85%E8%A3%85.webp',
     bg:'linear-gradient(135deg,#a18cd1,#fbc2eb)',
     desc:'曼谷7-11 / Tops / Big C 必买神器，引流体验款，买了都说好',
     colors:[], sizes:[]
@@ -729,6 +749,7 @@ const PRODUCTS = [
     id:'bio150', brand:'Bio Treatment', cat:'护发',
     name:'发膜 150ml 瓶装', sub:'正装主推款',
     price:30, emoji:'🧴', badge:'💰 超值',
+    img:'Bio%20Treatment%20150ml%20%E7%93%B6%E8%A3%85.webp',
     bg:'linear-gradient(135deg,#764ba2,#667eea)',
     desc:'足量正装瓶，更高性价比，日常护发家庭常备',
     colors:[], sizes:[]
@@ -737,6 +758,8 @@ const PRODUCTS = [
     id:'bloc', brand:'Bloc B Shoes', cat:'鞋履',
     name:'法国羊皮经典款', sub:'手工精品 · 限量感',
     price:550, emoji:'👠', badge:'✨ 精品',
+    img:'Bloc%20B%20Shoes%20%E6%8B%96%E9%9E%8B.webp',
+    sizeChart:'Bloc%20B%20Shoes%20%C2%B7%20%E9%9E%8B%E5%B1%A5%20size%20chart.png',
     bg:'linear-gradient(135deg,#2c3e50,#c9a84c)',
     desc:'法国进口羊皮，手工制作，Central Chitlom 附近限量供应',
     colors:['黑色','棕色','米白'], sizes:['35','36','37','38','39','40']
@@ -745,6 +768,8 @@ const PRODUCTS = [
     id:'slipC', brand:'Slip to Sleep', cat:'睡衣',
     name:'纯棉缎面套装（经典色）', sub:'曼谷最火睡衣',
     price:268, emoji:'🌙', badge:'⭐ 爆款',
+    img:'Slip%20to%20Sleep%20%C2%B7%20%E7%9D%A1%E8%A1%A3%20%E7%BA%AF%E6%A3%89%E7%BC%8E%E9%9D%A2%E5%A5%97%E8%A3%85%EF%BC%88%E7%BB%8F%E5%85%B8%E8%89%B2%EF%BC%89.jpeg',
+    sizeChart:'Slip%20to%20Sleep%20%C2%B7%20%E7%9D%A1%E8%A1%A3%20size%20chart.jpeg',
     bg:'linear-gradient(135deg,#f8cdda,#1d2671)',
     desc:'三层加厚设计，免穿内衣，25–40岁女性首选，Siam / Central World 有售',
     colors:['经典白','粉沙','黑色','薄荷绿'], sizes:['S','M','L','XL']
@@ -753,6 +778,8 @@ const PRODUCTS = [
     id:'slipM', brand:'Slip to Sleep', cat:'睡衣',
     name:'Moomin 联名款', sub:'限量联名 · 独家首发',
     price:318, emoji:'🦛', badge:'🦛 联名',
+    img:'Slip%20to%20Sleep%20Moomin%20%E7%9D%A1%E8%A1%A3.jpg',
+    sizeChart:'Slip%20to%20Sleep%20%C2%B7%20%E7%9D%A1%E8%A1%A3%20size%20chart.jpeg',
     bg:'linear-gradient(135deg,#e0c3fc,#8ec5fc)',
     desc:'可爱Moomin IP联名限量款，快抢！IP联名比经典款多价 RM 20–50',
     colors:['联名粉','联名蓝'], sizes:['S','M','L','XL']
@@ -769,6 +796,7 @@ const PRODUCTS = [
     id:'bunny22', brand:'Little Bunny', cat:'包袋',
     name:'Brick Bag 22cm（PU多色）', sub:'泰国设计师品牌',
     price:558, emoji:'👜', badge:'🎨 多色',
+    img:'Brick%20Bag%2022cm%EF%BC%88PU%E5%A4%9A%E8%89%B2%EF%BC%89.jpeg',
     bg:'linear-gradient(135deg,#d4a843,#9b6b1e)',
     desc:'手工皮革砖块包，多色可选，The Market BKK 门店，IG种草必备',
     colors:['奶油白','焦糖棕','玫瑰粉','深蓝','薄荷绿'], sizes:[]
@@ -777,6 +805,7 @@ const PRODUCTS = [
     id:'bunnyM', brand:'Little Bunny', cat:'包袋',
     name:'Mini Brick Bag（PU）', sub:'迷你引流款',
     price:388, emoji:'👛', badge:'✨ 新款',
+    img:'Little%20Bunny%20%C2%B7%20%E5%8C%85%E8%A2%8B%20Mini%20Brick%20Bag%EF%BC%88PU%EF%BC%89.jpeg',
     bg:'linear-gradient(135deg,#ffeaa7,#fab1a0)',
     desc:'小巧可爱，通勤约会两用，入坑首选，买大款的好搭档',
     colors:['奶油白','焦糖棕','玫瑰粉','薄荷绿'], sizes:[]
@@ -785,6 +814,7 @@ const PRODUCTS = [
     id:'moya', brand:'Mo-ya Bag (Pony Pony)', cat:'包袋',
     name:'Nylon 尼龙单肩包', sub:'平价时尚 · 日常通勤',
     price:148, emoji:'🎒', badge:'💚 轻便',
+    img:'Mo-ya%20Bag%20%28Pony%20Pony%29%20%C2%B7%20%E5%8C%85%E8%A2%8B%20Nylon%20%E5%B0%BC%E9%BE%99%E5%8D%95%E8%82%A9%E5%8C%85.jpg',
     bg:'linear-gradient(135deg,#11998e,#38ef7d)',
     desc:'轻便尼龙，学生上班族百搭，价格亲民，适合凑单',
     colors:['黑色','军绿','米白','马卡龙粉'], sizes:[]
@@ -793,6 +823,7 @@ const PRODUCTS = [
     id:'sausT', brand:'Saus', cat:'服饰',
     name:'腊肠狗印花 T-shirt', sub:'泰国小众潮牌首发',
     price:138, emoji:'🌭', badge:'🐕 独家',
+    img:'Saus%20%C2%B7%20%E6%9C%8D%E9%A5%B0%20%E8%85%8A%E8%82%A0%E7%8B%97%E5%8D%B0%E8%8A%B1%20T-shirt.jpeg',
     bg:'linear-gradient(135deg,#2c3e50,#4ca1af)',
     desc:'超萌腊肠狗印花，泰国首发，国内曝光极少，潮牌爱好者必入',
     colors:['白色','黑色','米白'], sizes:['S','M','L','XL','XXL']
@@ -801,6 +832,7 @@ const PRODUCTS = [
     id:'sausH', brand:'Saus', cat:'服饰',
     name:'腊肠狗帽子 / 配件', sub:'轻量好带 · 凑运费神器',
     price:95, emoji:'🧢', badge:'🐕 周边',
+    img:'Saus%20%C2%B7%20%E6%9C%8D%E9%A5%B0%20%E8%85%8A%E8%82%A0%E7%8B%97%E5%B8%BD%E5%AD%90%20%3A%20%E9%85%8D%E4%BB%B6.jpeg',
     bg:'linear-gradient(135deg,#4b6cb7,#182848)',
     desc:'轻巧好带，萌系宠物主题，凑单降运费最佳选择',
     colors:['白色','黑色'], sizes:['均码']
@@ -809,6 +841,7 @@ const PRODUCTS = [
     id:'sukOil', brand:'Sukonta', cat:'芳疗',
     name:'精油 / 香薰小套装', sub:'泰国天然草本',
     price:198, emoji:'🌿', badge:'🌿 天然',
+    img:'Sukonta%20%C2%B7%20%E8%8A%B3%E7%96%97%20%E7%B2%BE%E6%B2%B9%20%3A%20%E9%A6%99%E8%96%B0%E5%B0%8F%E5%A5%97%E8%A3%85.jpeg',
     bg:'linear-gradient(135deg,#134e5e,#71b280)',
     desc:'Icon Siam 高端草本品牌，精油套装，中产生活必备',
     colors:[], sizes:[]
@@ -817,6 +850,7 @@ const PRODUCTS = [
     id:'sukBox', brand:'Sukonta', cat:'芳疗',
     name:'室内扩香礼盒', sub:'高端礼品 · 送礼必备',
     price:328, emoji:'🕯️', badge:'🎁 礼盒',
+    img:'Sukonta%20%C2%B7%20%E8%8A%B3%E7%96%97%20%E5%AE%A4%E5%86%85%E6%89%A9%E9%A6%99%E7%A4%BC%E7%9B%92.jpeg',
     bg:'linear-gradient(135deg,#5f2c82,#49a09d)',
     desc:'精美礼盒包装，扩香套装，送礼高分选择，故事性极强',
     colors:[], sizes:[]
@@ -825,6 +859,8 @@ const PRODUCTS = [
     id:'luna', brand:'Luna on Heel', cat:'鞋履',
     name:'经典跟鞋（microfiber款）', sub:'设计感女鞋 · 高回购',
     price:308, emoji:'💗', badge:'💗 热销',
+    img:'Luna%20on%20Heel%20%C2%B7%20%E9%9E%8B%E5%B1%A5%20%E7%BB%8F%E5%85%B8%E8%B7%9F%E9%9E%8B%EF%BC%88microfiber%E6%AC%BE%EF%BC%89.jpeg',
+    sizeChart:'Luna-Sandals-size-pc.jpg',
     bg:'linear-gradient(135deg,#f093fb,#f5576c)',
     desc:'升级版microfiber材质，防水防汗，舒适好走，全年热销款',
     colors:['裸粉','黑色','深棕','米白'], sizes:['35','36','37','38','39','40']
@@ -906,10 +942,13 @@ function renderProducts() {
              ${p.sizes.map(s=>`<button class="vbtn" onclick="pickVariant('${p.id}','size','${s}',this)">${s}</button>`).join('')}
            </div>
          </div>` : '';
+    const imgHtml = p.img
+      ? `<img src="${p.img}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;object-position:center">`
+      : `<span>${p.emoji}</span>`;
     return `
     <div class="product-card fade">
       <div class="product-img" style="background:${p.bg}">
-        <span>${p.emoji}</span>
+        ${imgHtml}
         <div class="product-badge-tag">${p.badge}</div>
       </div>
       <div class="product-body">
@@ -917,6 +956,7 @@ function renderProducts() {
         <div class="prod-name">${p.name}</div>
         <div class="prod-desc">${p.desc}</div>
         ${colorHtml}${sizeHtml}
+        ${p.sizeChart ? `<button class="size-chart-btn" onclick="openSizeChart('${p.sizeChart}')">📏 查看尺码表</button>` : ''}
         <div class="prod-footer">
           <div class="prod-price">RM ${p.price}<small> /件</small></div>
           <button class="add-btn" onclick="addToCart('${p.id}')">+ 加入购物车</button>
@@ -1044,12 +1084,11 @@ function doLogin() {
 function doRegister() {
   const name = document.getElementById('regName').value.trim();
   const phone = document.getElementById('regPhone').value.trim();
-  const wechat = document.getElementById('regWechat').value.trim();
   const addr = document.getElementById('regAddr').value.trim();
-  if (!name || !phone) { toast('请填写姓名和手机号码'); return; }
+  if (!name || !phone) { toast('请填写姓名和电话号码'); return; }
   const users = getUsers();
   if (users[phone]) { toast('该号码已注册，请直接登录'); switchTab('login'); return; }
-  const u = { name, phone, wechat, addr, orders:[] };
+  const u = { name, phone, addr, orders:[] };
   users[phone] = u; saveUsers(users);
   setCurrentUser(u); closeModal('authModal'); updateUserUI(); toast(`注册成功！欢迎 ${name}！🎉`);
 }
@@ -1064,7 +1103,6 @@ function openEditProfile() {
   switchTab('reg');
   document.getElementById('regName').value = currentUser.name||'';
   document.getElementById('regPhone').value = currentUser.phone||'';
-  document.getElementById('regWechat').value = currentUser.wechat||'';
   document.getElementById('regAddr').value = currentUser.addr||'';
   openModal('authModal');
 }
@@ -1081,7 +1119,7 @@ function startCheckout() {
   // Prefill
   if (currentUser) {
     document.getElementById('ckName').value = currentUser.name||'';
-    document.getElementById('ckPhone').value = currentUser.phone||(currentUser.wechat||'');
+    document.getElementById('ckPhone').value = currentUser.phone||'';
     document.getElementById('ckAddr').value = currentUser.addr||'';
   }
   // Render order summary
@@ -1107,6 +1145,8 @@ function toStep2() {
   const phone = document.getElementById('ckPhone').value.trim();
   const addr = document.getElementById('ckAddr').value.trim();
   if (!name || !phone || !addr) { toast('请填写完整的姓名、联系方式和地址'); return; }
+  const confirmed = confirm('⚠️ 确认须知\n\n请确认你已核对好以下内容：\n• 尺码正确\n• 产品款式/颜色正确\n\n一旦订单确认，错误的尺码或款式将无法退换。\n\n确认继续下单？');
+  if (!confirmed) return;
   document.getElementById('ckDue').textContent = `RM ${cartTotal().toFixed(2)}`;
   setStep(2);
 }
@@ -1313,6 +1353,23 @@ function initFade() {
     entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('in'); });
   },{ threshold:0.08 });
   document.querySelectorAll('.fade:not(.in)').forEach(el=>obs.observe(el));
+}
+</script>
+
+<!-- Size Chart Lightbox -->
+<div id="sizeChartLightbox" onclick="closeSizeChart()">
+  <button class="lbx-close" onclick="closeSizeChart()">×</button>
+  <img id="sizeChartImg" src="" alt="尺码表">
+</div>
+
+<script>
+function openSizeChart(url) {
+  document.getElementById('sizeChartImg').src = url;
+  document.getElementById('sizeChartLightbox').classList.add('on');
+}
+function closeSizeChart() {
+  document.getElementById('sizeChartLightbox').classList.remove('on');
+  document.getElementById('sizeChartImg').src = '';
 }
 </script>
 </body>
