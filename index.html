@@ -716,9 +716,19 @@ function doGet(e) {
         <span style="color:#666;font-size:0.88rem">应付金额（产品）</span>
         <strong id="ckDue" style="color:var(--gold);font-size:1.2rem">RM 0</strong>
       </div>
-      <p style="font-size:0.78rem;color:#aaa;margin:-0.3rem 0 1rem">
-        运费按重量另计，我们会联系你确认。付款完成后请上传截图。
+      <p style="font-size:0.78rem;color:#aaa;margin:-0.3rem 0 0.75rem">
+        运费按重量另计，我们会联系你确认。🚚 预计发货时间：<strong style="color:var(--gold)">2–3 星期</strong>
       </p>
+
+      <!-- 付款方式 -->
+      <div style="background:rgba(200,150,62,0.1);border:1px solid rgba(200,150,62,0.35);border-radius:10px;padding:0.85rem 1rem;margin-bottom:1rem;font-size:0.83rem;line-height:1.9">
+        <div style="font-weight:600;color:var(--gold);margin-bottom:0.4rem">🏦 付款方式：Bank In / IBG 转账</div>
+        <div style="color:#bbb">银行：<strong style="color:#eee">Maybank</strong></div>
+        <div style="color:#bbb">账号：<strong style="color:#eee">1234 5678 9012</strong></div>
+        <div style="color:#bbb">户名：<strong style="color:#eee">TAN WEI LING</strong></div>
+        <div style="margin-top:0.5rem;font-size:0.76rem;color:#aaa">✅ 转账完成后请上传收据截图 ⬇️</div>
+      </div>
+
       <div class="fg">
         <label class="fl">付款截图 *</label>
         <div class="upload-zone" id="uploadZone" onclick="document.getElementById('receiptInput').click()">
@@ -749,10 +759,31 @@ function doGet(e) {
       <div class="success-wrap">
         <div class="success-icon">🎉</div>
         <h3>订单提交成功！</h3>
-        <p>我们会在 24 小时内通过你的联系方式确认订单。<br>请保持微信 / 手机畅通。</p>
+        <p>我们会在 24 小时内通过你的联系方式确认订单。<br>🚚 预计发货时间：2–3 星期</p>
         <div class="order-card" id="successInfo"></div>
         <button class="cta-btn" onclick="closeModal('checkoutModal');resetCart()">关闭</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Before Payment Modal -->
+<div class="modal" id="confirmWarningModal">
+  <div class="modal-box" style="max-width:360px;text-align:center">
+    <div style="font-size:2.8rem;margin-bottom:0.75rem">⚠️</div>
+    <h3 style="color:var(--coral);margin-bottom:0.75rem;font-size:1.1rem">下单前请确认</h3>
+    <div style="background:rgba(232,115,74,0.1);border:1px solid rgba(232,115,74,0.35);border-radius:10px;padding:1rem 1.2rem;margin-bottom:1rem;font-size:0.88rem;line-height:1.8;text-align:left">
+      <div>✅ 颜色 / 款式已确认</div>
+      <div>✅ 尺码已确认</div>
+      <div>✅ 数量已确认</div>
+    </div>
+    <p style="font-size:0.82rem;color:#f0b090;margin-bottom:1.25rem;line-height:1.6">
+      <strong>一旦卖出，将无法退换</strong><br>
+      请确认无误后再进行付款
+    </p>
+    <div class="btn-row" style="justify-content:center;gap:0.75rem">
+      <button class="btn-sec" onclick="closeModal('confirmWarningModal')">返回修改</button>
+      <button class="btn-pri" onclick="closeModal('confirmWarningModal');proceedToPayment()">✓ 我已确认，继续付款</button>
     </div>
   </div>
 </div>
@@ -1188,8 +1219,9 @@ function toStep2() {
   const phone = document.getElementById('ckPhone').value.trim();
   const addr = document.getElementById('ckAddr').value.trim();
   if (!name || !phone || !addr) { toast('请填写完整的姓名、联系方式和地址'); return; }
-  const confirmed = confirm('⚠️ 确认须知\n\n请确认你已核对好以下内容：\n• 尺码正确\n• 产品款式/颜色正确\n\n一旦订单确认，错误的尺码或款式将无法退换。\n\n确认继续下单？');
-  if (!confirmed) return;
+  openModal('confirmWarningModal');
+}
+function proceedToPayment() {
   document.getElementById('ckDue').textContent = `RM ${cartTotal().toFixed(2)}`;
   setStep(2);
 }
@@ -1337,13 +1369,13 @@ function statusClass(s) {
 // =========================================================
 const FAQS = [
   { q:'什么时候发货？',
-    a:'开团截止后，我们会按订单量统一补货、打包，并在 Day 5 安排发货。大件商品优先走顺丰国际（2–3 工作日送达），轻量商品视情况走 EMS 或货代以节省运费。' },
+    a:'收款确认后统一安排，预计发货时间为 2–3 星期。我们会在发货后通知你，请保持电话畅通。' },
   { q:'价格已经包含运费吗？',
     a:'页面标示的是产品建议售价，运费会按你订单的总重量在出单前另外计算并告知，多人合并包裹可以摊低单件运费。' },
   { q:'可以指定颜色或尺码吗？',
     a:'可以，请在订单备注栏写清楚，例如「Slip to Sleep 经典色 M」。部分款式现场库存有限，先下单的优先安排。' },
   { q:'如何付款？',
-    a:'提交订单后，我们会通过你填写的联系方式（电话/微信）发送付款方式与金额，付款后请上传付款截图作为确认凭证。' },
+    a:'付款方式为 Bank In / IBG 银行转账。提交订单后页面会显示我们的银行账号，转账完成后请直接在页面上传收据截图作为确认凭证。' },
   { q:'如果泰国买不到了怎么办？',
     a:'若现场库存已售罄，我们会在第一时间联系你，并全额退款，不收任何手续费，请放心下单。' }
 ];
